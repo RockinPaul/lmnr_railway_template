@@ -37,12 +37,47 @@ fi
 # Without an identity provider the sign-in page accepts any email address with
 # no password, which is not acceptable on a public URL. Refuse to start rather
 # than come up wide open.
-if [ -z "${AUTH_GITHUB_ID:-}" ] || [ -z "${AUTH_GITHUB_SECRET:-}" ]; then
+#
+# Any one of the five providers Laminar supports closes that hole, and the
+# variable groups below mirror its own checks exactly (lib/features/features.ts),
+# so configuring Google, Azure, Okta or Keycloak is just as good as GitHub and
+# the GitHub variables can be removed.
+provider=""
+set_provider() {
+  [ -n "$provider" ] || provider="$1"
+}
+if [ -n "${AUTH_GITHUB_ID:-}" ] && [ -n "${AUTH_GITHUB_SECRET:-}" ]; then
+  set_provider "GitHub"
+fi
+if [ -n "${AUTH_GOOGLE_ID:-}" ] && [ -n "${AUTH_GOOGLE_SECRET:-}" ]; then
+  set_provider "Google"
+fi
+if [ -n "${AUTH_AZURE_AD_CLIENT_ID:-}" ] && [ -n "${AUTH_AZURE_AD_CLIENT_SECRET:-}" ] \
+  && [ -n "${AUTH_AZURE_AD_TENANT_ID:-}" ]; then
+  set_provider "Azure AD"
+fi
+if [ -n "${AUTH_OKTA_CLIENT_ID:-}" ] && [ -n "${AUTH_OKTA_CLIENT_SECRET:-}" ] \
+  && [ -n "${AUTH_OKTA_ISSUER:-}" ]; then
+  set_provider "Okta"
+fi
+if [ -n "${AUTH_KEYCLOAK_ID:-}" ] && [ -n "${AUTH_KEYCLOAK_SECRET:-}" ] \
+  && [ -n "${AUTH_KEYCLOAK_ISSUER:-}" ]; then
+  set_provider "Keycloak"
+fi
+
+if [ -n "$provider" ]; then
+  echo "sign-in provider configured: $provider"
+else
   if [ "${ALLOW_PASSWORDLESS_SIGNIN:-}" != "true" ]; then
-    echo "AUTH_GITHUB_ID and AUTH_GITHUB_SECRET are not set." >&2
+    echo "No identity provider is configured." >&2
     echo "Laminar's self-hosted sign-in accepts ANY email with no password when no" >&2
     echo "identity provider is configured, so this deployment would be open to anyone" >&2
-    echo "who finds its URL. Create a GitHub OAuth app and set both variables." >&2
+    echo "who finds its URL. Set one of these groups of variables:" >&2
+    echo "  AUTH_GITHUB_ID + AUTH_GITHUB_SECRET" >&2
+    echo "  AUTH_GOOGLE_ID + AUTH_GOOGLE_SECRET" >&2
+    echo "  AUTH_AZURE_AD_CLIENT_ID + AUTH_AZURE_AD_CLIENT_SECRET + AUTH_AZURE_AD_TENANT_ID" >&2
+    echo "  AUTH_OKTA_CLIENT_ID + AUTH_OKTA_CLIENT_SECRET + AUTH_OKTA_ISSUER" >&2
+    echo "  AUTH_KEYCLOAK_ID + AUTH_KEYCLOAK_SECRET + AUTH_KEYCLOAK_ISSUER" >&2
     echo "To accept that risk deliberately, set ALLOW_PASSWORDLESS_SIGNIN=true." >&2
     exit 1
   fi

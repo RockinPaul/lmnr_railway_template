@@ -5,7 +5,7 @@ observability and evaluation platform for LLM applications. It collects
 OpenTelemetry traces from your agents, stores them in ClickHouse, and gives you
 a UI to search, inspect and evaluate them.
 
-This template runs Laminar's `LITE` configuration: four services, no message
+This template runs Laminar's `LITE` configuration: five services, no message
 broker, no Redis.
 
 ## What gets deployed
@@ -15,19 +15,36 @@ broker, no Redis.
 | `frontend` | `ghcr.io/lmnr-ai/frontend:v0.2.4` | yes | Web UI, auth, and the schema migrations |
 | `app-server` | `ghcr.io/lmnr-ai/app-server:v0.2.4` | yes | OTLP ingest endpoint and the query API |
 | `clickhouse` | `clickhouse/clickhouse-server:26.5` | no | Span and trace storage |
+| `quickwit` | `quickwit/quickwit:v0.8.2` | no | Full-text search over prompts and completions |
 | `postgres` | `postgres:16` | no | Projects, users, API keys |
 
-All four are thin wrappers over the upstream images. The wrappers bake in the
+All five are thin wrappers over the upstream images. The wrappers bake in the
 settings that are fixed for Railway, add an IPv6 bridge that Laminar's API
 server needs, and carry the two ClickHouse configuration files that upstream's
 compose file bind-mounts.
 
-## Before you deploy: create a GitHub OAuth app
+## Before you deploy: create an OAuth app
 
-**This template will not start without GitHub OAuth credentials, and that is
-deliberate.** With no identity provider configured, Laminar's self-hosted
-sign-in page accepts *any* email address with *no* password. On a public URL
-that means anyone who finds it can sign in as anyone.
+**This template will not start without an identity provider, and that is
+deliberate.** With none configured, Laminar's self-hosted sign-in page accepts
+*any* email address with *no* password. On a public URL that means anyone who
+finds it can sign in as anyone.
+
+GitHub is the path the deploy form asks for, and the steps below use it. Any one
+of the five providers Laminar supports will do, so if your team is on Google
+Workspace, Entra ID, Okta or Keycloak, deploy with anything in the GitHub fields
+and then replace them with the group you want:
+
+| Provider | Variables on the `frontend` service |
+|---|---|
+| GitHub | `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET` |
+| Google | `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` |
+| Microsoft Entra ID | `AUTH_AZURE_AD_CLIENT_ID`, `AUTH_AZURE_AD_CLIENT_SECRET`, `AUTH_AZURE_AD_TENANT_ID` |
+| Okta | `AUTH_OKTA_CLIENT_ID`, `AUTH_OKTA_CLIENT_SECRET`, `AUTH_OKTA_ISSUER` |
+| Keycloak | `AUTH_KEYCLOAK_ID`, `AUTH_KEYCLOAK_SECRET`, `AUTH_KEYCLOAK_ISSUER` |
+
+Delete the GitHub variables once another group is set, or the sign-in page will
+keep offering a GitHub button that cannot work.
 
 1. Go to <https://github.com/settings/developers> and click **New OAuth App**.
 2. Put anything in the callback URL for now, for example
@@ -67,7 +84,7 @@ references and generated secrets.
 |---|---|---|---|
 | `AUTH_GITHUB_ID` | `frontend` | none, required | GitHub OAuth app client ID |
 | `AUTH_GITHUB_SECRET` | `frontend` | none, required | GitHub OAuth app client secret |
-| `ALLOW_PASSWORDLESS_SIGNIN` | `frontend` | unset | Set to `true` to run without GitHub OAuth and accept that anyone with the URL can sign in |
+| `ALLOW_PASSWORDLESS_SIGNIN` | `frontend` | unset | Set to `true` to run with no identity provider at all and accept that anyone with the URL can sign in |
 | `AEAD_SECRET_KEY` | `app-server` | generated | 64 hex characters. Encrypts stored provider keys. Changing it makes existing ones unreadable |
 | `SHARED_SECRET_TOKEN` | `app-server` | generated | Authenticates the frontend to the API server |
 | `NEXTAUTH_SECRET` | `frontend` | generated | Signs session cookies |
@@ -92,6 +109,11 @@ Laminar also sends anonymous self-hosted usage statistics; set
 - Both stores keep their data on volumes and survive redeploys. PostgreSQL
   writes to a subdirectory of its mount point, because a Railway volume root
   holds a root-owned `lost+found` that `initdb` refuses to accept.
+- Full-text search runs through `quickwit`, which indexes spans as they arrive
+  and answers queries in a few seconds. The `frontend` creates the search
+  indexes on boot from definitions vendored in `frontend/quickwit-indexes/`,
+  because the published image does not ship them. See that directory's README
+  before bumping the image tag.
 - The `frontend` healthcheck is `/api/auth/ok`, which returns a plain 200 and
   proves the app and its auth layer are both up. The site root is not usable
   for this: it answers a redirect to the sign-in page, which the platform
@@ -103,11 +125,15 @@ Laminar also sends anonymous self-hosted usage statistics; set
 
 ## Limitations
 
-- **No full-text span search.** Upstream's search is backed by Quickwit, which
-  `LITE` mode leaves out. Everything else, including the SQL query engine over
-  ClickHouse, works.
 - **Evaluations that call an LLM need a provider key.** Set one in the project
   settings, or the evaluation features stay idle.
+- **One `frontend` replica only.** Without Redis there is no cross-replica lock,
+  and the service says so in its logs on every boot. Scale up vertically.
+- **Span processing is in-process, not queued.** `LITE` mode drops RabbitMQ, so
+  a crash can lose spans that are in flight. Fine for development and small
+  team traffic, not for high-volume production ingest.
+- **Ingestion rate limiting and PII redaction are off.** They need Redis and a
+  separate service respectively, neither of which this template deploys.
 - **This is not a small deployment.** ClickHouse and a Rust API server and a
   Next.js app are all always-on, and ClickHouse in particular wants memory.
   Expect it to cost meaningfully more than a single-service template.
@@ -117,6 +143,7 @@ Laminar also sends anonymous self-hosted usage statistics; set
 
 ## Component licenses
 
-The wrappers and docs here are MIT licensed, see `LICENSE`. Laminar is
-Apache-2.0, ClickHouse is Apache-2.0, and PostgreSQL uses the PostgreSQL
-license.
+The wrappers and docs here are MIT licensed, see `LICENSE`. The three vendored
+files in `frontend/quickwit-indexes/` are Laminar's, under Apache-2.0. Laminar
+is Apache-2.0, ClickHouse is Apache-2.0, Quickwit is Apache-2.0, and PostgreSQL
+uses the PostgreSQL license.

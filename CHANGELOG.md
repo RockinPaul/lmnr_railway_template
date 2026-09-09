@@ -27,3 +27,24 @@ Initial release.
   The marketplace overview avoids `<angle-bracket>` placeholders: the publish
   pipeline strips them as HTML, even inside backticks, which silently turned a
   callback URL into `https:///api/auth/callback/github`.
+
+## 2026-09-09, later
+
+Two changes after review.
+
+- **Added a fifth service, `quickwit`,** restoring full-text search over prompts
+  and completions. Without it the search box returned no results silently: the
+  lookup failed and the frontend swallowed the error, so it read as "no
+  matches" rather than "search is off".
+- **The frontend now carries Laminar's Quickwit index definitions.** The
+  published image copies `lib/db/migrations` and `lib/clickhouse/migrations`
+  into its standalone output but not `lib/quickwit/indexes`, so upstream's own
+  startup code logged "Quickwit indexes directory not found" and created
+  nothing. The three files are vendored at the same tag as the image; see
+  `frontend/quickwit-indexes/README.md` before bumping it.
+- **The sign-in guard now accepts any of Laminar's five identity providers,**
+  not just GitHub. Previously a team on Google Workspace or Okta had to set
+  `ALLOW_PASSWORDLESS_SIGNIN=true` to get past the check, which read as opting
+  into an open deployment when they had a perfectly good provider configured.
+  The variable groups mirror upstream's own checks, so a partial group (two of
+  Okta's three values) is correctly treated as not configured.

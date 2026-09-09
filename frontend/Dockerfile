@@ -16,6 +16,13 @@ ENV ENVIRONMENT=LITE \
     CLICKHOUSE_RO_USER=lmnr \
     CLICKHOUSE_DB=default
 
+# The published image copies lib/db/migrations and lib/clickhouse/migrations
+# into its standalone output but not lib/quickwit/indexes, so upstream's own
+# startup code cannot create the search indexes and logs "Quickwit indexes
+# directory not found". These are the same files at the same tag as the image.
+# See quickwit-indexes/README.md; re-fetch them when bumping the image.
+COPY --chown=1001:1001 quickwit-indexes/*.yaml /app/lib/quickwit/indexes/
+
 COPY --chmod=755 entrypoint.sh /railway-entrypoint.sh
 COPY --chmod=644 wait-for-deps.mjs /railway-wait-for-deps.mjs
 
