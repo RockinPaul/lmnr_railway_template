@@ -18,3 +18,8 @@ Initial release.
   passwordless sign-in unless that is explicitly allowed.
 - GitHub OAuth credentials are required. Without an identity provider,
   Laminar's self-hosted sign-in accepts any email address with no password.
+- The `frontend` entrypoint exports `HOSTNAME=::` so Next.js binds IPv6.
+  Railway injects `HOSTNAME` at run time and it overrides the image's ENV, so
+  this cannot be set in the Dockerfile.
+- The `frontend` healthcheck is `/api/auth/ok`. The site root redirects to the
+  sign-in page, and Railway's healthcheck counts a redirect as a failure.

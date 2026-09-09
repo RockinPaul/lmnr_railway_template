@@ -92,6 +92,14 @@ Laminar also sends anonymous self-hosted usage statistics; set
 - Both stores keep their data on volumes and survive redeploys. PostgreSQL
   writes to a subdirectory of its mount point, because a Railway volume root
   holds a root-owned `lost+found` that `initdb` refuses to accept.
+- The `frontend` healthcheck is `/api/auth/ok`, which returns a plain 200 and
+  proves the app and its auth layer are both up. The site root is not usable
+  for this: it answers a redirect to the sign-in page, which the platform
+  treats as unhealthy.
+- The `frontend` entrypoint exports `HOSTNAME=::` before starting Next.js.
+  Railway injects `HOSTNAME` with the container's own hostname at run time,
+  which overrides anything the image sets, and Next.js binds whatever it finds
+  there. Left alone it binds IPv4 only and the deployment never starts.
 
 ## Limitations
 
