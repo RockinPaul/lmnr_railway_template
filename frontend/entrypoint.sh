@@ -51,4 +51,15 @@ fi
 
 node /railway-wait-for-deps.mjs
 
-exec node server.js "$@"
+# Next.js reads its bind address from HOSTNAME, and both Docker and Railway
+# inject HOSTNAME with the container's own hostname at run time, which beats
+# anything ENV sets in the image. Export it here, after that injection, so the
+# listener is on the IPv6 wildcard: Railway does not consider a service started
+# until it sees an IPv6 listener, and an IPv4-only bind leaves the deployment
+# stuck in "deploying" forever. On Linux this socket is dual-stack, so the
+# public edge still reaches it over IPv4.
+export HOSTNAME="${NEXT_BIND_HOST:-::}"
+
+# No "$@": the upstream image's CMD is ["node","server.js"], and Docker passes
+# CMD as arguments to an overridden ENTRYPOINT, which would duplicate it.
+exec node server.js
