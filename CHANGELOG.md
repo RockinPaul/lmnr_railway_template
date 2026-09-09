@@ -48,3 +48,7 @@ Two changes after review.
   into an open deployment when they had a perfectly good provider configured.
   The variable groups mirror upstream's own checks, so a partial group (two of
   Okta's three values) is correctly treated as not configured.
+- **The app-server now waits for Quickwit before starting.** It connects once
+  at boot and, on failure, logs "Quickwit not available - skipping spans
+  indexer workers" and never retries, so losing a DNS race against a
+  sibling service disabled search for the life of the container.

@@ -110,7 +110,9 @@ Laminar also sends anonymous self-hosted usage statistics; set
   writes to a subdirectory of its mount point, because a Railway volume root
   holds a root-owned `lost+found` that `initdb` refuses to accept.
 - Full-text search runs through `quickwit`, which indexes spans as they arrive
-  and answers queries in a few seconds. The `frontend` creates the search
+  and answers queries in a few seconds. The `app-server` waits for it before
+  starting, because it attempts that connection once and never retries, so
+  losing the startup race would disable search until the next redeploy. The `frontend` creates the search
   indexes on boot from definitions vendored in `frontend/quickwit-indexes/`,
   because the published image does not ship them. See that directory's README
   before bumping the image tag.

@@ -54,6 +54,22 @@ ch_port=$(printf '%s' "$CLICKHOUSE_URL" | sed -nE 's|^https?://[^:/]+:([0-9]+).*
 wait_for "$pg_host" "${pg_port:-5432}" "postgres"
 wait_for "$ch_host" "${ch_port:-8123}" "clickhouse"
 
+# Quickwit matters more than the other two, because the server tries to connect
+# exactly ONCE at boot and, on failure, logs "Quickwit not available - skipping
+# spans indexer workers" and never retries. Racing its DNS entry therefore
+# disables full-text search for the whole life of the container, silently: the
+# search box just returns nothing.
+if [ -n "${QUICKWIT_SEARCH_URL:-}" ]; then
+  qw_host=$(printf '%s' "$QUICKWIT_SEARCH_URL" | sed -E 's|^https?://||; s|[:/].*$||')
+  qw_port=$(printf '%s' "$QUICKWIT_SEARCH_URL" | sed -nE 's|^https?://[^:/]+:([0-9]+).*$|\1|p')
+  wait_for "$qw_host" "${qw_port:-7280}" "quickwit (search)"
+fi
+if [ -n "${QUICKWIT_INGEST_URL:-}" ]; then
+  qwi_host=$(printf '%s' "$QUICKWIT_INGEST_URL" | sed -E 's|^https?://||; s|[:/].*$||')
+  qwi_port=$(printf '%s' "$QUICKWIT_INGEST_URL" | sed -nE 's|^https?://[^:/]+:([0-9]+).*$|\1|p')
+  wait_for "$qwi_host" "${qwi_port:-7281}" "quickwit (ingest)"
+fi
+
 # Restart a bridge if it ever exits, so a transient failure does not silently
 # cut the frontend off from the API for the life of the container.
 bridge() {
