@@ -64,7 +64,8 @@ directory:
 
 **Set the GitHub OAuth callback URL after deploying.** Create the OAuth app
 first with any placeholder callback, deploy with its client ID and secret, then
-set the callback to `https://<frontend-domain>/api/auth/callback/github`. This
+set the callback to `https://YOUR-FRONTEND-DOMAIN/api/auth/callback/github`,
+using the domain Railway gave the frontend service. This
 order matters: with no identity provider configured, Laminar's self-hosted
 sign-in accepts any email address with no password, so the template refuses to
 start rather than come up open.

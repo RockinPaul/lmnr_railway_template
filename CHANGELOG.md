@@ -23,3 +23,7 @@ Initial release.
   this cannot be set in the Dockerfile.
 - The `frontend` healthcheck is `/api/auth/ok`. The site root redirects to the
   sign-in page, and Railway's healthcheck counts a redirect as a failure.
+- Published to the Railway marketplace as `laminar` under Observability.
+  The marketplace overview avoids `<angle-bracket>` placeholders: the publish
+  pipeline strips them as HTML, even inside backticks, which silently turned a
+  callback URL into `https:///api/auth/callback/github`.
