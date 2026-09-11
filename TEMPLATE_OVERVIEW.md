@@ -80,6 +80,12 @@ with no password, so the template refuses to start rather than come up open.
 The deploy form asks for GitHub, but Google, Microsoft Entra ID, Okta and
 Keycloak all work; the README lists the variables for each.
 
+Railway shows an egress warning on the `NEXT_PUBLIC_URL` and `NEXTAUTH_URL`
+variables, and it is safe to ignore. Those hold the frontend's own public
+origin, which Laminar hands to a browser or to an identity provider rather than
+using to connect to anything; a private address would break sign-in. Every
+connection between the five services already runs over the private network.
+
 What `LITE` gives up is throughput rather than features. Span processing runs
 in-process instead of through a broker, and the web app runs as a single replica
 because there is no Redis to hold a cross-replica lock. Ingestion rate limiting

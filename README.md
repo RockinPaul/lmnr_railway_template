@@ -108,6 +108,18 @@ Laminar also sends anonymous self-hosted usage statistics; set
   Next.js layer in front of it to do that. It is therefore only ever reachable
   over the private network in this template, never from the internet.
 - `postgres` and `clickhouse` have no public domains at all.
+- **Railway shows an egress warning on `NEXT_PUBLIC_URL` and `NEXTAUTH_URL`, and
+  it is safe to ignore.** The platform flags every variable built from
+  `RAILWAY_PUBLIC_DOMAIN`, because a service that used one to reach another
+  service would leave the private network and be billed for egress. Neither of
+  these is a connection target. They are the origin Laminar hands to a browser
+  or to a third party: `NEXTAUTH_URL` is the canonical origin NextAuth builds
+  its OAuth callback URLs from, and `NEXT_PUBLIC_URL` is read only when
+  composing Stripe and Slack redirect URLs, both belonging to features this
+  template leaves switched off. A private `.railway.internal` address would
+  break them, because neither a browser nor an external service can resolve
+  Railway's internal DNS. Every connection this template actually opens already
+  uses the private network.
 - Both stores keep their data on volumes and survive redeploys. PostgreSQL
   writes to a subdirectory of its mount point, because a Railway volume root
   holds a root-owned `lost+found` that `initdb` refuses to accept.
