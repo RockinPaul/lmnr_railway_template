@@ -1,5 +1,7 @@
 # Laminar on Railway
 
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/laminar?referralCode=YqmMB-&utm_medium=integration&utm_source=template&utm_campaign=generic)
+
 Self-host [Laminar](https://github.com/lmnr-ai/lmnr), an open-source
 observability and evaluation platform for LLM applications. It collects
 OpenTelemetry traces from your agents, stores them in ClickHouse, and gives you
