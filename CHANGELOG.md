@@ -5,7 +5,6 @@
 - Laminar `v0.2.4` → `v0.3.2` (`frontend` and `app-server`), and **Quickwit `v0.8.2` → `v0.9.1`**, the version upstream's compose file moves to in the same range. Laminar now upserts its Quickwit index configs on startup. The vendored index definitions in `frontend/quickwit-indexes/` are byte-identical at v0.3.2.
 - Per-feature LLM provider variables (`INPUT_EXTRACTION_LLM_PROVIDER` and the like) are replaced by a `llm_feature_routes` table. This template set none of them.
 - Security-related: vulnerable `sharp` and `browserslist` dependencies bumped, search withholds snippets under a masking policy, API keys and CLI tokens read masked in dual mode.
-
 - **The `frontend` healthcheck timeout is now 900 s** (set in the template definition). A fresh v0.3.2 deploy applied its Postgres migrations in 2 s, then spent about five minutes on ClickHouse migrations before answering; the 300 s default gave up six seconds before the server was ready.
 
 ### Upgrading an existing deployment
