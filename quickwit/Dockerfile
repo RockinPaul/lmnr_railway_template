@@ -4,7 +4,7 @@
 # the frontend swallows the error, so a user reads "no matches" rather than
 # "search is off". That is why it is part of this template rather than an
 # optional extra.
-FROM quickwit/quickwit:v0.8.2
+FROM quickwit/quickwit:v0.9.1
 
 # Quickwit binds all three of its sockets to one host, and the image ships
 # 0.0.0.0, which Railway's IPv6 private network cannot reach. The data

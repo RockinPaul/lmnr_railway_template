@@ -3,7 +3,7 @@
 # On boot this service applies the Postgres migrations, the ClickHouse
 # migrations and the seed data, so it is the only service that needs write
 # access to both stores and the only one whose first start is slow.
-FROM ghcr.io/lmnr-ai/frontend:v0.2.4
+FROM ghcr.io/lmnr-ai/frontend:v0.3.2
 
 # LITE selects self-hosted behaviour: it runs the migrations on boot and turns
 # off the cloud-only billing and landing-page features. PORT is what Railway

@@ -4,7 +4,7 @@
 # binds 0.0.0.0 (IPv4) on all three of its ports while Railway's private network
 # is IPv6, so sibling services cannot reach it without a bridge. And the fixed
 # self-hosted settings, so they are never deploy-time questions.
-FROM ghcr.io/lmnr-ai/app-server:v0.2.4
+FROM ghcr.io/lmnr-ai/app-server:v0.3.2
 
 USER root
 RUN apt-get update \

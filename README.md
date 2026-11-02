@@ -14,10 +14,10 @@ broker, no Redis.
 
 | Service | Image | Public | Purpose |
 |---|---|---|---|
-| `frontend` | `ghcr.io/lmnr-ai/frontend:v0.2.4` | yes | Web UI, auth, and the schema migrations |
-| `app-server` | `ghcr.io/lmnr-ai/app-server:v0.2.4` | yes | OTLP ingest endpoint and the query API |
+| `frontend` | `ghcr.io/lmnr-ai/frontend:v0.3.2` | yes | Web UI, auth, and the schema migrations |
+| `app-server` | `ghcr.io/lmnr-ai/app-server:v0.3.2` | yes | OTLP ingest endpoint and the query API |
 | `clickhouse` | `clickhouse/clickhouse-server:26.5` | no | Span and trace storage |
-| `quickwit` | `quickwit/quickwit:v0.8.2` | no | Full-text search over prompts and completions |
+| `quickwit` | `quickwit/quickwit:v0.9.1` | no | Full-text search over prompts and completions |
 | `postgres` | `postgres:16` | no | Projects, users, API keys |
 
 All five are thin wrappers over the upstream images. The wrappers bake in the

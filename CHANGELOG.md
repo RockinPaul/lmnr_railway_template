@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-02
+
+- Laminar `v0.2.4` → `v0.3.2` (`frontend` and `app-server`), and **Quickwit `v0.8.2` → `v0.9.1`**, the version upstream's compose file moves to in the same range. Laminar now upserts its Quickwit index configs on startup. The vendored index definitions in `frontend/quickwit-indexes/` are byte-identical at v0.3.2.
+- Per-feature LLM provider variables (`INPUT_EXTRACTION_LLM_PROVIDER` and the like) are replaced by a `llm_feature_routes` table. This template set none of them.
+- Security-related: vulnerable `sharp` and `browserslist` dependencies bumped, search withholds snippets under a masking policy, API keys and CLI tokens read masked in dual mode.
+
+### Upgrading an existing deployment
+
+**Back up the `quickwit` volume first.** Quickwit 0.9 migrates its metastore on the first write, and going back to 0.8.2 needs that backup. Postgres and ClickHouse migrations run on `frontend` start as before.
+
 ## 2026-09-09
 
 Initial release.

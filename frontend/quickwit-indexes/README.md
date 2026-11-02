@@ -1,7 +1,7 @@
 # Vendored Quickwit index definitions
 
 These three files come from `frontend/lib/quickwit/indexes/` in
-[lmnr-ai/lmnr](https://github.com/lmnr-ai/lmnr) at tag **v0.2.4**, the same tag
+[lmnr-ai/lmnr](https://github.com/lmnr-ai/lmnr) at tag **v0.3.2**, the same tag
 as the `ghcr.io/lmnr-ai/frontend` image this template pins (Apache-2.0).
 
 They are vendored because the published frontend image does not include them:

@@ -54,16 +54,16 @@ template never gives it a public domain.
 Five services build from this template's repository, each from its own
 directory:
 
-- **frontend** — `ghcr.io/lmnr-ai/frontend:v0.2.4`. Runs the UI and, on boot,
+- **frontend** — `ghcr.io/lmnr-ai/frontend:v0.3.2`. Runs the UI and, on boot,
   the PostgreSQL and ClickHouse migrations. Its entrypoint waits for both
   stores so a first deploy does not crash-loop, and refuses to start without
   GitHub OAuth credentials.
-- **app-server** — `ghcr.io/lmnr-ai/app-server:v0.2.4`. The OTLP ingest
+- **app-server** — `ghcr.io/lmnr-ai/app-server:v0.3.2`. The OTLP ingest
   endpoint and query API, public on `/v1/traces`. Its wrapper adds `socat`
   bridges giving the IPv4 listeners an IPv6 address on the private network.
 - **clickhouse** — `clickhouse/clickhouse-server:26.5`, with upstream's two
   configuration files baked in and an IPv6 listener added.
-- **quickwit** — `quickwit/quickwit:v0.8.2`, listening on the private network
+- **quickwit** — `quickwit/quickwit:v0.9.1`, listening on the private network
   only. The frontend creates the search indexes on boot from definitions
   vendored at the same tag as the Laminar image, because the published image
   does not include them and would otherwise leave search returning nothing.
