@@ -6,6 +6,8 @@
 - Per-feature LLM provider variables (`INPUT_EXTRACTION_LLM_PROVIDER` and the like) are replaced by a `llm_feature_routes` table. This template set none of them.
 - Security-related: vulnerable `sharp` and `browserslist` dependencies bumped, search withholds snippets under a masking policy, API keys and CLI tokens read masked in dual mode.
 
+- **The `frontend` healthcheck timeout is now 900 s** (set in the template definition). A fresh v0.3.2 deploy applied its Postgres migrations in 2 s, then spent about five minutes on ClickHouse migrations before answering; the 300 s default gave up six seconds before the server was ready.
+
 ### Upgrading an existing deployment
 
 **Back up the `quickwit` volume first.** Quickwit 0.9 migrates its metastore on the first write, and going back to 0.8.2 needs that backup. Postgres and ClickHouse migrations run on `frontend` start as before.

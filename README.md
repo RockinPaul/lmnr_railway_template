@@ -133,7 +133,9 @@ Laminar also sends anonymous self-hosted usage statistics; set
 - The `frontend` healthcheck is `/api/auth/ok`, which returns a plain 200 and
   proves the app and its auth layer are both up. The site root is not usable
   for this: it answers a redirect to the sign-in page, which the platform
-  treats as unhealthy.
+  treats as unhealthy. Its timeout is 900 s in the template definition: from
+  v0.3 a fresh deploy spends about five minutes on ClickHouse migrations before
+  the server answers, and the 300 s default failed by six seconds.
 - The `frontend` entrypoint exports `HOSTNAME=::` before starting Next.js.
   Railway injects `HOSTNAME` with the container's own hostname at run time,
   which overrides anything the image sets, and Next.js binds whatever it finds
