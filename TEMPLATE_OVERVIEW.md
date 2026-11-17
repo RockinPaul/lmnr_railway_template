@@ -54,11 +54,11 @@ template never gives it a public domain.
 Five services build from this template's repository, each from its own
 directory:
 
-- **frontend** — `ghcr.io/lmnr-ai/frontend:v0.3.2`. Runs the UI and, on boot,
+- **frontend** — `ghcr.io/lmnr-ai/frontend:v0.3.4`. Runs the UI and, on boot,
   the PostgreSQL and ClickHouse migrations. Its entrypoint waits for both
   stores so a first deploy does not crash-loop, and refuses to start without
   GitHub OAuth credentials.
-- **app-server** — `ghcr.io/lmnr-ai/app-server:v0.3.2`. The OTLP ingest
+- **app-server** — `ghcr.io/lmnr-ai/app-server:v0.3.4`. The OTLP ingest
   endpoint and query API, public on `/v1/traces`. Its wrapper adds `socat`
   bridges giving the IPv4 listeners an IPv6 address on the private network.
 - **clickhouse** — `clickhouse/clickhouse-server:26.5`, with upstream's two
@@ -79,12 +79,23 @@ provider configured, Laminar's self-hosted sign-in accepts any email address
 with no password, so the template refuses to start rather than come up open.
 The deploy form asks for GitHub, but Google, Microsoft Entra ID, Okta and
 Keycloak all work; the README lists the variables for each.
+`FORCE_EMAIL_AUTH=true` also enables passwordless sign-in when an identity provider is present;
+the wrapper refuses that configuration unless `ALLOW_PASSWORDLESS_SIGNIN=true` explicitly accepts
+the risk. Better Auth accepts the existing `NEXTAUTH_URL`/`NEXTAUTH_SECRET` variables as aliases.
+To disable self-hosted telemetry, use `LAMINAR_TELEMETRY_DISABLED=true` on the frontend.
 
 Railway shows an egress warning on the `NEXT_PUBLIC_URL` and `NEXTAUTH_URL`
 variables, and it is safe to ignore. Those hold the frontend's own public
-origin, which Laminar hands to a browser or to an identity provider rather than
-using to connect to anything; a private address would break sign-in. Every
+origin, which Laminar hands to browsers, CLI clients or an identity provider;
+a private address would break those flows. Every
 connection between the five services already runs over the private network.
+
+This release was checked on a fresh Linux/amd64 five-service stack: authenticated local-email
+session, workspace/project/API-key creation, real OTLP trace ingestion and retrieval, credential
+guards, then replacement of all containers on the same volumes. No real OAuth/browser, optional
+CLI authentication, paid model or Railway deployment is claimed. Agent-versioning table rebuilds
+and the signal-events legacy-table copy do not require old data for fresh setup; the empty legacy
+table can be cleaned up later. Existing-data migration was not rehearsed for this template.
 
 What `LITE` gives up is throughput rather than features. Span processing runs
 in-process instead of through a broker, and the web app runs as a single replica
