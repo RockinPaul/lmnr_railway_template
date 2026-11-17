@@ -14,8 +14,8 @@ broker, no Redis.
 
 | Service | Image | Public | Purpose |
 |---|---|---|---|
-| `frontend` | `ghcr.io/lmnr-ai/frontend:v0.3.2` | yes | Web UI, auth, and the schema migrations |
-| `app-server` | `ghcr.io/lmnr-ai/app-server:v0.3.2` | yes | OTLP ingest endpoint and the query API |
+| `frontend` | `ghcr.io/lmnr-ai/frontend:v0.3.4` | yes | Web UI, auth, and the schema migrations |
+| `app-server` | `ghcr.io/lmnr-ai/app-server:v0.3.4` | yes | OTLP ingest endpoint and the query API |
 | `clickhouse` | `clickhouse/clickhouse-server:26.5` | no | Span and trace storage |
 | `quickwit` | `quickwit/quickwit:v0.9.1` | no | Full-text search over prompts and completions |
 | `postgres` | `postgres:16` | no | Projects, users, API keys |
@@ -64,7 +64,7 @@ nobody can log in, which is the safe way round.
 ## First run
 
 The first boot takes a few minutes. The `frontend` service applies the
-PostgreSQL migrations, then about sixty ClickHouse migrations, then downloads a
+PostgreSQL migrations, then the ClickHouse migrations, then downloads a
 model-price table, so give it time before assuming something is wrong. The
 other services wait for their stores rather than crash-looping.
 
@@ -87,6 +87,7 @@ references and generated secrets.
 | `AUTH_GITHUB_ID` | `frontend` | none, required | GitHub OAuth app client ID |
 | `AUTH_GITHUB_SECRET` | `frontend` | none, required | GitHub OAuth app client secret |
 | `ALLOW_PASSWORDLESS_SIGNIN` | `frontend` | unset | Set to `true` to run with no identity provider at all and accept that anyone with the URL can sign in |
+| `FORCE_EMAIL_AUTH` | `frontend` | unset | Enables passwordless local email even with an identity provider. The wrapper rejects this unless `ALLOW_PASSWORDLESS_SIGNIN=true` explicitly accepts that risk. |
 | `AEAD_SECRET_KEY` | `app-server` | generated | 64 hex characters. Encrypts stored provider keys. Changing it makes existing ones unreadable |
 | `SHARED_SECRET_TOKEN` | `app-server` | generated | Authenticates the frontend to the API server |
 | `NEXTAUTH_SECRET` | `frontend` | generated | Signs session cookies |
@@ -94,7 +95,13 @@ references and generated secrets.
 To turn on the AI features in the UI, such as chat-with-trace and
 SQL-with-AI, set `LLM_PROVIDER` and `LLM_API_KEY` on the `frontend` service.
 Laminar also sends anonymous self-hosted usage statistics; set
-`TELEMETRY_DISABLED=true` on the `frontend` service to opt out.
+`LAMINAR_TELEMETRY_DISABLED=true` on the `frontend` service to opt out.
+
+Version 0.3.4 uses Better Auth. Existing `NEXTAUTH_SECRET` and `NEXTAUTH_URL` variables
+remain supported aliases for `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL`; no rename is required.
+Keep `NEXT_PUBLIC_URL` set to the public frontend origin. CLI authentication can also use
+`NEXT_INTERNAL_URL` for the frontend's internal origin; without a configured origin upstream
+falls back to its hosted service for that optional flow.
 
 ## How it fits together
 
@@ -114,9 +121,9 @@ Laminar also sends anonymous self-hosted usage statistics; set
   service would leave the private network and be billed for egress. Neither of
   these is a connection target. They are the origin Laminar hands to a browser
   or to a third party: `NEXTAUTH_URL` is the canonical origin NextAuth builds
-  its OAuth callback URLs from, and `NEXT_PUBLIC_URL` is read only when
-  composing Stripe and Slack redirect URLs, both belonging to features this
-  template leaves switched off. A private `.railway.internal` address would
+  its OAuth callback URLs from (now accepted by Better Auth), and `NEXT_PUBLIC_URL` is a
+  browser/CLI-visible origin, also used for external redirects and authentication discovery.
+  A private `.railway.internal` address would
   break them, because neither a browser nor an external service can resolve
   Railway's internal DNS. Every connection this template actually opens already
   uses the private network.
@@ -142,6 +149,20 @@ Laminar also sends anonymous self-hosted usage statistics; set
   there. Left alone it binds IPv4 only and the deployment never starts.
 
 ## Limitations
+
+- **This 0.3.4 update was verified as a fresh install.** Upstream's agent-versioning migrations
+  rebuild earlier tables; they are safe on an empty database but are not an old-data preservation
+  guarantee. The signal-events migration creates a ReplacingMergeTree and starts an asynchronous
+  legacy-table copy. An empty source does not block setup; removal of the copied legacy table is
+  a later manual cleanup, not a fresh-install prerequisite.
+- **Verification used the real five-service Linux/amd64 stack.** A deliberate local-email test
+  session created a workspace/project/API key, ingested an OTLP span and retrieved it through
+  the authenticated UI API. All five containers were replaced on the same three volumes;
+  session/key validity, identities, trace content and migration counts persisted. Missing/wrong
+  cookies and API keys were rejected. Real OAuth/SSO, browser interaction, optional CLI auth and
+  paid-provider features were not exercised, and no Railway deployment was made.
+  The startup auth guard has a local regression check:
+  `python3 -B -m unittest discover -s frontend -p 'test_*.py'`.
 
 - **Evaluations that call an LLM need a provider key.** Set one in the project
   settings, or the evaluation features stay idle.

@@ -42,6 +42,12 @@ fi
 # variable groups below mirror its own checks exactly (lib/features/features.ts),
 # so configuring Google, Azure, Okta or Keycloak is just as good as GitHub and
 # the GitHub variables can be removed.
+if [ "${FORCE_EMAIL_AUTH:-}" = "true" ] && [ "${ALLOW_PASSWORDLESS_SIGNIN:-}" != "true" ]; then
+  echo "FORCE_EMAIL_AUTH=true enables passwordless sign-in even with an identity provider." >&2
+  echo "Remove it, or explicitly accept public passwordless access with ALLOW_PASSWORDLESS_SIGNIN=true." >&2
+  exit 1
+fi
+
 provider=""
 set_provider() {
   [ -n "$provider" ] || provider="$1"
